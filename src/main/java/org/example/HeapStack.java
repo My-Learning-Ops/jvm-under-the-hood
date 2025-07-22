@@ -77,21 +77,63 @@ public class HeapStack {
     }
 
     /**
+     * Runs the provided task, then requests garbage collection and waits briefly to
+     * allow cleanup actions to complete.
+     *
+     * @param task The Runnable task to execute
+     * @throws InterruptedException If the thread is interrupted while sleeping
+     */
+    public static void run(Runnable task) throws InterruptedException {
+        // After this call, obj is unreachable and eligible for GC
+        task.run(); // method();
+
+        // Suggest JVM to run GC (not guaranteed)
+        System.out.println("Requesting garbage collection...");
+        System.gc();
+
+        // Allow time for Cleaner to run in background
+        Thread.sleep(1000);
+        System.out.println("End of Main method");
+    }
+
+    /**
+     * Runs the provided task while tracking memory usage before and after its execution.
+     * It also requests garbage collection and waits briefly to allow cleanup actions.
+     *
+     * @param task The Runnable task to execute
+     * @throws InterruptedException if the thread is interrupted while sleeping
+     */
+    public static void runWithMemoryUsage(Runnable task) throws InterruptedException {
+        // Get runtime object to measure memory usage
+        Runtime runtime = Runtime.getRuntime();
+
+        // Calculate used memory before the method call
+        long memoryUsedBefore = runtime.totalMemory() - runtime.freeMemory();
+
+        // Runs the task
+        task.run();
+
+        // Attempt to force garbage collection
+        System.out.println("Requesting garbage collection...");
+        System.gc();
+
+        Thread.sleep(1000);
+
+        // Calculate used memory after GC
+        long memoryUsedAfter = runtime.totalMemory() - runtime.freeMemory();
+
+        System.out.println("Used memory before: " + memoryUsedBefore + " bytes");
+        System.out.println("Used memory after: " + memoryUsedAfter + " bytes");
+    }
+
+    /**
      * Calls the method, forces GC, and shows when the object is cleaned.
      * @param args unused.
      */
     public static void main(String[] args) {
         try {
-            // After this call, obj is unreachable and eligible for GC
-            method();
+            runWithMemoryUsage(() -> method());
 
-            // Suggest JVM to run GC (not guaranteed)
-            System.out.println("Requesting garbage collection...");
-            System.gc();
-
-            // Allow time for Cleaner to run in background
-            Thread.sleep(1000);
-            System.out.println("End of Main method");
         } catch (Exception e) {
             System.out.println("An error occurred: " + e.getMessage());
         }
