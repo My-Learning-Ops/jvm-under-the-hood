@@ -1,10 +1,25 @@
 package org.example;
 
 import java.lang.ref.Cleaner;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class demonstrates Heap vs Stack memory and how the Cleaner API works to clean up
  * objects after they have become unreachable and eligible for garbage collection
+ *
+ * The program creates instances of MyObject, and each object lives on the Heap with its own
+ * memory address. As long as the code holds references to these objects, the JVM considers
+ * them reachable, meaning they can still be used, so not eligible for garbage collection.
+ * When the list is set to null, there are no more references to the instances of MyObject,
+ * and they become unreachable. During the next garbage collection cycle, either triggered
+ * by the system call to 'gc()' or automatically by the JVM, the JVM finds all unreachable
+ * objects, frees the memory they occupy on the heap, and runs the cleanup logic registered
+ * in the Cleaner for each of those objects asynchronously.
+ *
+ * Heap - Where all objects live, Shared among all threads. Dynamic lifetime managed by GC.
+ * Stack - Stores method call frames, Each thread has its own stack.
+ *
  */
 public class HeapStack {
 
@@ -77,6 +92,21 @@ public class HeapStack {
     }
 
     /**
+     * Creates 100,000 objects to simulate memory pressure.
+     * It holds references in a list, then nullifies to make it unreachable
+     * which encourages the garbage collection and Cleaner to work on many objects
+     */
+    public static void createManyObjects() {
+        List<MyObject> list = new ArrayList<>();
+        for (int i = 0; i < 100000; i++) {
+            list.add(new MyObject(i));
+        }
+        System.out.println("Created 100,000 MyObject instances.");
+        // Nullify list to remove references and make objects eligible for GC
+        list = null;
+    }
+
+    /**
      * Runs the provided task, then requests garbage collection and waits briefly to
      * allow cleanup actions to complete.
      *
@@ -124,6 +154,8 @@ public class HeapStack {
 
         System.out.println("Used memory before: " + memoryUsedBefore + " bytes");
         System.out.println("Used memory after: " + memoryUsedAfter + " bytes");
+        long totalMemoryUsage = memoryUsedAfter - memoryUsedBefore;
+        System.out.println("Total Memory Used: " + totalMemoryUsage);
     }
 
     /**
@@ -132,7 +164,11 @@ public class HeapStack {
      */
     public static void main(String[] args) {
         try {
+            System.out.println("=== Single Object Demo ===");
             runWithMemoryUsage(() -> method());
+
+            System.out.println("\n=== Many Objects Demo ===");
+            runWithMemoryUsage(() -> createManyObjects());
 
         } catch (Exception e) {
             System.out.println("An error occurred: " + e.getMessage());
