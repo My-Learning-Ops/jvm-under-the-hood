@@ -1,0 +1,10 @@
+
+/target/
+
+# Compiled Java class files
+*.class
+
+# Other generated files
+*.lst
+*.log
+*.out
