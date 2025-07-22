@@ -1,3 +1,6 @@
+
+.idea
+
 # Ignore build directories and generated files
 /target/
 *.class
@@ -43,4 +46,3 @@ build/
 
 ### Mac OS ###
 .DS_Store
-
